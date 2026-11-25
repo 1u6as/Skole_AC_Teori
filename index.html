@@ -270,7 +270,26 @@ const knownEl=document.getElementById("known"), targetEl=document.getElementById
 Object.entries(vars).forEach(([k,v])=>{knownEl.insertAdjacentHTML("beforeend",`<label class="check"><input type="checkbox" value="${k}"><span>${v}</span></label>`);targetEl.insertAdjacentHTML("beforeend",`<option value="${k}">${v}</option>`)});
 function levelMode(){return document.querySelector('input[name="level"]:checked')?.value||"basic";}
 function activeFormulas(){return formulas.filter(f=>levelMode()==="all"||f.level!=="advanced");}
-document.querySelectorAll('input[name="level"]').forEach(el=>el.addEventListener('change',()=>{document.getElementById('levelInfo').textContent=levelMode()==="all"?"Viser grundlæggende formler plus avancerede emner.":"Viser grundlæggende AC-formler.";renderGuide();renderLibrary();}));
+// Begræns også alle valgmuligheder til det valgte formelniveau.
+const allTopics={topic:[...document.getElementById("topic").options].map(o=>({value:o.value,text:o.textContent})),libTopic:[...document.getElementById("libTopic").options].map(o=>({value:o.value,text:o.textContent}))};
+const allVars=Object.entries(vars).map(([value,text])=>({value,text}));
+function updateLevelChoices(){
+ const pool=activeFormulas();
+ const topics=new Set(pool.map(f=>f.topic));
+ ["topic","libTopic"].forEach(id=>{
+  const el=document.getElementById(id), previous=el.value;
+  const source=allTopics[id].filter(o=>o.value==="all"||topics.has(o.value));
+  el.innerHTML=source.map(o=>`<option value="${o.value}">${o.text}</option>`).join("");
+  el.value=source.some(o=>o.value===previous)?previous:"all";
+ });
+ const allowed=new Set(); pool.forEach(f=>{f.known.forEach(k=>allowed.add(k));allowed.add(f.target);});
+ const previousTarget=targetEl.value;
+ targetEl.innerHTML='<option value="">Vis alle muligheder</option>'+allVars.filter(v=>allowed.has(v.value)).map(v=>`<option value="${v.value}">${v.text}</option>`).join("");
+ targetEl.value=allowed.has(previousTarget)?previousTarget:"";
+ const selected=[...knownEl.querySelectorAll("input:checked")].map(x=>x.value);
+ knownEl.innerHTML=allVars.filter(v=>allowed.has(v.value)).map(v=>`<label class="check"><input type="checkbox" value="${v.value}" ${selected.includes(v.value)?"checked":""}><span>${v.text}</span></label>`).join("");
+}
+document.querySelectorAll('input[name="level"]').forEach(el=>el.addEventListener('change',()=>{document.getElementById('levelInfo').textContent=levelMode()==="all"?"Viser grundlæggende formler plus avancerede emner.":"Viser grundlæggende AC-formler.";updateLevelChoices();renderGuide();renderLibrary();}));
 function card(f,selected=null){const missing=selected===null?[]:f.known.filter(k=>!selected.includes(k));const unit=f.unit?"<span class=\"tag\">Enhed: "+f.unit+"</span>":"";const levelTag=f.level==="advanced"?"<span class=\"tag\">Avanceret</span>":"<span class=\"tag\">Grundlæggende</span>";const status=selected===null?"":(missing.length?"<p class=\"small\"><strong>Mangler:</strong> "+missing.map(k=>vars[k]).join(" · ")+"</p>":"<p class=\"small\" style=\"color:var(--green)\"><strong>Alle nødvendige størrelser er valgt.</strong></p>");return "<article class=\"formula\"><h3>"+f.name+"</h3><div class=\"eq\">"+f.eq+"</div><div>"+f.desc+"</div><div class=\"tags\"><span class=\"tag\">"+topicNames[f.topic]+"</span><span class=\"tag\">Kan finde: "+vars[f.target]+"</span>"+unit+"</div><p class=\"small\"><strong>Kræver:</strong> "+f.known.map(k=>vars[k]).join(" · ")+"</p>"+status+"</article>"}
 function renderGuide(){
  const selected=[...knownEl.querySelectorAll("input:checked")].map(x=>x.value), target=targetEl.value, topic=document.getElementById("topic").value;
@@ -287,6 +306,7 @@ document.getElementById("findBtn").addEventListener("click",renderGuide);
 knownEl.addEventListener("change",renderGuide);targetEl.addEventListener("change",renderGuide);document.getElementById("topic").addEventListener("change",renderGuide);
 function renderLibrary(){const q=document.getElementById("search").value.toLowerCase(),topic=document.getElementById("libTopic").value;const found=activeFormulas().filter(f=>(topic==="all"||f.topic===topic)&&[f.name,f.eq,f.desc,vars[f.target],...f.known.map(k=>vars[k])].join(" ").toLowerCase().includes(q));document.getElementById("libraryResults").innerHTML=found.length?`<p class="small">${found.length} formler i oversigten</p>${found.map(f=>card(f)).join("")}`:`<div class="empty">Ingen formler matcher din søgning.</div>`;}
 document.getElementById("search").addEventListener("input",renderLibrary);document.getElementById("libTopic").addEventListener("change",renderLibrary);
+updateLevelChoices();
 function show(which){const guide=which==="guide";document.getElementById("guide").classList.toggle("hidden",!guide);document.getElementById("library").classList.toggle("hidden",guide);document.getElementById("guideTab").setAttribute("aria-selected",guide);document.getElementById("libraryTab").setAttribute("aria-selected",!guide);}
 document.getElementById("guideTab").addEventListener("click",()=>show("guide"));document.getElementById("libraryTab").addEventListener("click",()=>show("library"));renderLibrary();renderGuide();
 if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("./sw.js").catch(()=>{});
