@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#172b43">
+<meta name="description" content="AC Theory – formeloversigt og formelhjælper uden automatiske beregninger.">
+<link rel="manifest" href="manifest.json">
+<title>AC Theory</title>
+<style>
+:root{--navy:#172b43;--blue:#29435e;--paper:#f3f6fa;--ink:#182536;--muted:#637184;--line:#dce3eb;--accent:#1769aa;--green:#18794e}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:var(--navy);color:white;padding:22px max(18px,calc((100% - 1050px)/2)) 20px}
+header h1{margin:0;font-size:1.65rem}header p{margin:4px 0 0;color:#d3dfec}
+main{max-width:1050px;margin:22px auto;padding:0 16px 48px}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+button,.tab{font:inherit;cursor:pointer;border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:white;color:var(--ink)}
+.tab[aria-selected=true],button.primary{background:var(--navy);color:white;border-color:var(--navy)}
+.panel,.card{background:white;border:1px solid var(--line);border-radius:15px;padding:18px;margin-bottom:16px;box-shadow:0 2px 8px #172b430a}
+h2{font-size:1.25rem;margin:0 0 8px}h3{font-size:1.05rem;margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+label{display:block;font-weight:600;margin:12px 0 6px}
+select,input[type=search]{width:100%;padding:11px;border:1px solid #bac6d3;border-radius:9px;background:white;font:inherit;color:var(--ink)}
+.checkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+.check{border:1px solid var(--line);padding:9px;border-radius:9px;display:flex;gap:8px;align-items:center;font-weight:500}
+.check input{accent-color:var(--accent);width:17px;height:17px}
+.formula{border-left:4px solid var(--accent);padding:12px 14px;background:#f5f8fc;border-radius:8px;margin-top:10px}
+.eq{font:600 1.2rem Georgia,serif;overflow-wrap:anywhere;margin:5px 0}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.tag{font-size:.8rem;background:#eaf0f6;padding:3px 8px;border-radius:20px}
+.note{background:#fff8e8;border:1px solid #f0dfb7;padding:12px;border-radius:10px;color:#604b1d}
+.empty{padding:14px;color:var(--muted);background:#f7f9fb;border-radius:9px}
+.hidden{display:none!important}.small{font-size:.9rem;color:var(--muted)}
+footer{color:var(--muted);font-size:.85rem;text-align:center;margin-top:28px}
+@media(max-width:560px){header{padding:18px}main{margin-top:14px}.panel{padding:14px}.eq{font-size:1.08rem}}
+</style>
+</head>
+<body>
+<header><h1>⚡ AC Theory</h1><p>Formeloversigt og formelhjælper – du regner selv</p></header>
+<main>
+<nav aria-label="Hovedmenu">
+<button class="tab" id="guideTab" aria-selected="true">Formelhjælper</button>
+<button class="tab" id="libraryTab" aria-selected="false">Formeloversigt</button>
+</nav>
+
+<section id="guide" class="panel">
+<h2>Find en formel ud fra det, du ved</h2>
+<p class="sub">Vælg først, hvilke størrelser du kender, og derefter hvad du skal finde. Appen viser mulige formler – den regner ikke noget ud.</p>
+<label for="topic">Område</label>
+<select id="topic"><option value="all">Alle områder</option><option value="basic">Grundlæggende AC</option><option value="coil">Spole</option><option value="cap">Kondensator</option><option value="series">Serieforbindelse</option><option value="parallel">Parallelforbindelse</option></select>
+<label>Hvilke værdier har du?</label>
+<div class="checkgrid" id="known"></div>
+<label for="target">Hvad skal du finde?</label>
+<select id="target"><option value="">Vælg en størrelse</option></select>
+<div style="margin-top:14px"><button class="primary" id="findBtn">Vis relevante formler</button></div>
+<div id="guideResults" aria-live="polite" style="margin-top:16px"><div class="empty">Vælg dine kendte værdier og det, du skal finde.</div></div>
+</section>
+
+<section id="library" class="panel hidden">
+<h2>Formeloversigt</h2>
+<p class="sub">Gennemse formlerne efter emne eller søg efter en størrelse/formel.</p>
+<input type="search" id="search" placeholder="Søg fx Xc, frekvens eller impedans">
+<label for="libTopic">Filtrer efter område</label>
+<select id="libTopic"><option value="all">Alle områder</option><option value="basic">Grundlæggende AC</option><option value="coil">Spole</option><option value="cap">Kondensator</option><option value="series">Serieforbindelse</option><option value="parallel">Parallelforbindelse</option></select>
+<div id="libraryResults"></div>
+</section>
+
+<section class="panel">
+<h2>Sådan bruger du appen</h2>
+<ol>
+<li>Vælg kendte værdier i formelhjælperen.</li>
+<li>Vælg den størrelse, du skal finde.</li>
+<li>Læs den foreslåede formel og symbolforklaringen.</li>
+<li>Indsæt selv dine tal i formlen og regn opgaven.</li>
+</ol>
+<div class="note"><strong>Vigtigt:</strong> Dette er første version. Kontrollér altid, at formlen passer til opgavens kredsløb og de givne betingelser. Især for serie- og parallelkredsløb afhænger formlen af, hvilke komponenter der indgår.</div>
+</section>
+<footer>AC Theory · Første version · Ingen automatiske beregninger</footer>
+</main>
+<script>
+const vars = {
+ U:"Spænding (U)", I:"Strøm (I)", R:"Modstand (R)", P:"Effekt (P)", f:"Frekvens (f)",
+ w:"Vinkelfrekvens (ω)", L:"Induktans (L)", XL:"Induktiv reaktans (Xₗ)",
+ C:"Kapacitans (C)", XC:"Kapacitiv reaktans (X꜀)", Z:"Impedans (Z)",
+ Rsum:"Samlet modstand (Rₛ)", X:"Samlet reaktans (X)", Zt:"Samlet impedans (Zₜ)",
+ G:"Konduktans (G)", B:"Susceptans (B)", Y:"Admittans (Y)"
+};
+const formulas = [
+{id:"ohmU",topic:"basic",name:"Ohms lov – spænding",eq:"U = R · I",known:["R","I"],target:"U",desc:"Bruges til at finde spænding over en modstand."},
+{id:"ohmI",topic:"basic",name:"Ohms lov – strøm",eq:"I = U / R",known:["U","R"],target:"I",desc:"Bruges til at finde strøm gennem en modstand."},
+{id:"ohmR",topic:"basic",name:"Ohms lov – modstand",eq:"R = U / I",known:["U","I"],target:"R",desc:"Bruges til at finde modstand."},
+{id:"power",topic:"basic",name:"Effekt",eq:"P = U · I",known:["U","I"],target:"P",desc:"Elektrisk effekt ved spænding og strøm."},
+{id:"omega",topic:"basic",name:"Vinkelfrekvens",eq:"ω = 2 · π · f",known:["f"],target:"w",desc:"Sammenhæng mellem frekvens og vinkelfrekvens."},
+{id:"freq",topic:"basic",name:"Frekvens",eq:"f = ω / (2 · π)",known:["w"],target:"f",desc:"Omskrivning af vinkelfrekvensformlen."},
+{id:"xl",topic:"coil",name:"Induktiv reaktans",eq:"Xₗ = 2 · π · f · L",known:["f","L"],target:"XL",desc:"Spolens reaktans ved en given frekvens."},
+{id:"inductance",topic:"coil",name:"Induktans ud fra reaktans",eq:"L = Xₗ / (2 · π · f)",known:["XL","f"],target:"L",desc:"Omskrivning af formlen for induktiv reaktans."},
+{id:"xc",topic:"cap",name:"Kapacitiv reaktans",eq:"X꜀ = 1 / (2 · π · f · C)",known:["f","C"],target:"XC",desc:"Kondensatorens reaktans ved en given frekvens."},
+{id:"capacitance",topic:"cap",name:"Kapacitans ud fra reaktans",eq:"C = 1 / (2 · π · f · X꜀)",known:["f","XC"],target:"C",desc:"Omskrivning af formlen for kapacitiv reaktans."},
+{id:"zrl",topic:"series",name:"Impedans – serie RL",eq:"Z = √(R² + Xₗ²)",known:["R","XL"],target:"Z",desc:"Seriekredsløb med modstand og spole."},
+{id:"zrc",topic:"series",name:"Impedans – serie RC",eq:"Z = √(R² + X꜀²)",known:["R","XC"],target:"Z",desc:"Seriekredsløb med modstand og kondensator."},
+{id:"zrlc",topic:"series",name:"Impedans – serie RLC",eq:"Z = √(R² + (Xₗ − X꜀)²)",known:["R","XL","XC"],target:"Z",desc:"Seriekredsløb med modstand, spole og kondensator."},
+{id:"xseries",topic:"series",name:"Samlet reaktans – serie RLC",eq:"X = Xₗ − X꜀",known:["XL","XC"],target:"X",desc:"Fortegnet viser, om kredsløbet samlet er induktivt eller kapacitivt."},
+{id:"rsum",topic:"series",name:"Samlet modstand – serie",eq:"Rₛ = R₁ + R₂ + …",known:["R"],target:"Rsum",desc:"Modstande i serie lægges sammen."},
+{id:"zparallel",topic:"parallel",name:"Impedans – parallel (generel)",eq:"1/Zₜ = 1/Z₁ + 1/Z₂ + …",known:["Z"],target:"Zt",desc:"Generel sammenhæng for impedanser i parallel. Brug de enkelte grenimpedanser."},
+{id:"rparallel",topic:"parallel",name:"Modstand – parallel",eq:"1/Rₜ = 1/R₁ + 1/R₂ + …",known:["R"],target:"Rsum",desc:"Generel formel for modstande i parallel."},
+{id:"g",topic:"parallel",name:"Konduktans",eq:"G = 1 / R",known:["R"],target:"G",desc:"Konduktans er den reciprokke værdi af modstand."}
+];
+const topicNames={basic:"Grundlæggende AC",coil:"Spole",cap:"Kondensator",series:"Serieforbindelse",parallel:"Parallelforbindelse"};
+const knownEl=document.getElementById("known"), targetEl=document.getElementById("target");
+Object.entries(vars).forEach(([k,v])=>{knownEl.insertAdjacentHTML("beforeend",`<label class="check"><input type="checkbox" value="${k}"><span>${v}</span></label>`);targetEl.insertAdjacentHTML("beforeend",`<option value="${k}">${v}</option>`)});
+function card(f){return `<article class="formula"><h3>${f.name}</h3><div class="eq">${f.eq}</div><div>${f.desc}</div><div class="tags"><span class="tag">${topicNames[f.topic]}</span><span class="tag">Find: ${vars[f.target]}</span></div><p class="small"><strong>Formlen kræver:</strong> ${f.known.map(k=>vars[k]).join(" · ")}</p></article>`}
+function renderGuide(){
+ const selected=[...knownEl.querySelectorAll("input:checked")].map(x=>x.value), target=targetEl.value, topic=document.getElementById("topic").value;
+ const matches=formulas.filter(f=>(topic==="all"||f.topic===topic)&&f.target===target&&f.known.every(k=>selected.includes(k)));
+ const results=document.getElementById("guideResults");
+ results.innerHTML=matches.length?`<p><strong>${matches.length} relevant(e) formel(r) fundet:</strong></p>${matches.map(card).join("")}`:`<div class="empty">Jeg fandt ingen formler, hvor alle nødvendige værdier er valgt. Kontrollér dine valg, eller prøv et andet område. Appen viser kun formler, den har i denne første version.</div>`;
+}
+document.getElementById("findBtn").addEventListener("click",renderGuide);
+function renderLibrary(){
+ const q=document.getElementById("search").value.toLowerCase(), topic=document.getElementById("libTopic").value;
+ const found=formulas.filter(f=>(topic==="all"||f.topic===topic)&&[f.name,f.eq,f.desc,vars[f.target],...f.known.map(k=>vars[k])].join(" ").toLowerCase().includes(q));
+ document.getElementById("libraryResults").innerHTML=found.length?found.map(card).join(""):`<div class="empty">Ingen formler matcher din søgning.</div>`;
+}
+document.getElementById("search").addEventListener("input",renderLibrary);
+document.getElementById("libTopic").addEventListener("change",renderLibrary);
+function show(which){
+ const guide=which==="guide";
+ document.getElementById("guide").classList.toggle("hidden",!guide);
+ document.getElementById("library").classList.toggle("hidden",guide);
+ document.getElementById("guideTab").setAttribute("aria-selected",guide);
+ document.getElementById("libraryTab").setAttribute("aria-selected",!guide);
+}
+document.getElementById("guideTab").addEventListener("click",()=>show("guide"));
+document.getElementById("libraryTab").addEventListener("click",()=>show("library"));
+renderLibrary();
+if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("./sw.js").catch(()=>{});
+</script>
+</body></html>
