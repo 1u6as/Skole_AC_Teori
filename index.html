@@ -53,7 +53,7 @@ footer{color:var(--muted);font-size:.85rem;text-align:center;margin-top:28px}
 
 <section id="guide" class="panel">
 <h2>Find en formel ud fra det, du ved</h2>
-<p class="sub">Markér de størrelser, du allerede kender. Appen viser automatisk alle formler, du kan bruge, og hvilke ukendte størrelser du kan finde. Du kan også vælge én bestemt størrelse.</p>
+<p class="sub">Markér de størrelser, du allerede kender. Appen viser automatisk alle formler, du kan bruge, og hvilke ukendte størrelser du kan finde. Formler til at finde størrelser, du allerede har markeret som kendte, skjules. Du kan også vælge én bestemt størrelse.</p>
 <label for="topic">Område</label>
 <select id="topic"><option value="all">Alle områder</option><option value="basic">Grundlæggende AC</option><option value="coil">Spole</option><option value="cap">Kondensator</option><option value="series">Serieforbindelse</option><option value="parallel">Parallelforbindelse</option><option value="wave">Sinusform og RMS</option><option value="complex">Komplekse tal og fasorer</option><option value="resonance">Resonans og Q-faktor</option><option value="three">Trefaset AC</option><option value="transformer">Transformatorer</option><option value="filters">Filtre</option><option value="powerquality">Effektkvalitet</option></select>
 <label>Hvilke værdier har du?</label>
@@ -296,7 +296,8 @@ function renderGuide(){
  const pool=activeFormulas().filter(f=>(topic==="all"||f.topic===topic));
  const reachable=new Set(selected), possible=[]; let changed=true;
  while(changed){changed=false;for(const f of pool){if(f.known.every(k=>reachable.has(k))&&!possible.includes(f)){possible.push(f);if(!reachable.has(f.target)){reachable.add(f.target);changed=true;}}}}
- const matches=possible.filter(f=>!target||f.target===target);
+ // Vis ikke formler, der beregner en størrelse, som brugeren allerede har markeret som kendt.
+ const matches=possible.filter(f=>!selected.includes(f.target)&&(!target||f.target===target));
  const results=document.getElementById("guideResults");
  if(!selected.length){results.innerHTML='<div class="empty">Markér først de værdier, du allerede kender. Så finder appen de formler, du kan bruge.</div>';return;}
  if(matches.length){results.innerHTML=`<p><strong>${matches.length} formel${matches.length===1?"":"r"} kan bruges med dine valgte værdier:</strong></p>${matches.map(f=>card(f,selected)).join("")}`;}
