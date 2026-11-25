@@ -322,15 +322,18 @@ document.getElementById("includeElectro").addEventListener("change",refreshFormu
 function card(f,selected=null){const missing=selected===null?[]:f.known.filter(k=>!selected.includes(k));const unit=f.unit?"<span class=\"tag\">Enhed: "+f.unit+"</span>":"";const levelTag=f.level==="advanced"?"<span class=\"tag\">Avanceret</span>":"<span class=\"tag\">Grundlæggende</span>";const status=selected===null?"":(missing.length?"<p class=\"small\"><strong>Mangler:</strong> "+missing.map(k=>vars[k]).join(" · ")+"</p>":"<p class=\"small\" style=\"color:var(--green)\"><strong>Alle nødvendige størrelser er valgt.</strong></p>");return "<article class=\"formula\"><h3>"+f.name+"</h3><div class=\"eq\">"+f.eq+"</div><div>"+f.desc+"</div><div class=\"tags\"><span class=\"tag\">"+topicNames[f.topic]+"</span><span class=\"tag\">Kan finde: "+vars[f.target]+"</span>"+unit+"</div><p class=\"small\"><strong>Kræver:</strong> "+f.known.map(k=>vars[k]).join(" · ")+"</p>"+status+"</article>"}
 function renderGuide(){
  const selected=[...knownEl.querySelectorAll("input:checked")].map(x=>x.value), target=targetEl.value, topic=document.getElementById("topic").value;
- const pool=activeFormulas().filter(f=>(topic==="all"||f.topic===topic));
+ const pool=activeFormulas().filter(f=>(topic==="all"||f.topic===topic)&&!selected.includes(f.target)&&(!target||f.target===target));
  const reachable=new Set(selected), possible=[]; let changed=true;
+ // Beregn først, hvilke størrelser der kan udledes trin for trin fra brugerens kendte værdier.
  while(changed){changed=false;for(const f of pool){if(f.known.every(k=>reachable.has(k))&&!possible.includes(f)){possible.push(f);if(!reachable.has(f.target)){reachable.add(f.target);changed=true;}}}}
- // Vis ikke formler, der beregner en størrelse, som brugeren allerede har markeret som kendt.
- const matches=possible.filter(f=>!selected.includes(f.target)&&(!target||f.target===target));
+ const missing=pool.filter(f=>!possible.includes(f)).map(f=>({...f,_missing:f.known.filter(k=>!reachable.has(k))}));
  const results=document.getElementById("guideResults");
- if(!selected.length){results.innerHTML='<div class="empty">Markér først de værdier, du allerede kender. Så finder appen de formler, du kan bruge.</div>';return;}
- if(matches.length){results.innerHTML=`<p><strong>${matches.length} formel${matches.length===1?"":"r"} kan bruges med dine valgte værdier:</strong></p>${matches.map(f=>card(f,selected)).join("")}`;}
- else {results.innerHTML=`<div class="empty">Ingen formler matcher ${target?"den valgte størrelse":"dine valg"}. Prøv at vælge flere kendte værdier eller et andet område.</div>`;}
+ if(!selected.length){results.innerHTML='<div class="empty">Markér først de værdier, du allerede kender. Så finder appen de formler, du kan bruge, og viser nedenunder, hvad der mangler til de øvrige formler.</div>';return;}
+ let html='';
+ if(possible.length){html+=`<h3>Kan bruges nu (${possible.length})</h3><p class="small">Disse formler kan anvendes med dine kendte værdier eller værdier, der kan findes undervejs.</p>${possible.map(f=>card(f,Array.from(reachable))).join("")}`;}
+ if(missing.length){html+=`<h3 style="margin-top:24px">Mangler værdier (${missing.length})</h3><p class="small">Disse formler kan først bruges, når du har fundet eller tilføjet de manglende størrelser.</p>${missing.map(f=>card(f,Array.from(reachable))).join("")}`;}
+ if(!html){html='<div class="empty">Ingen formler matcher dine valg. Prøv at vælge flere kendte værdier eller et andet område.</div>';}
+ results.innerHTML=html;
 }
 document.getElementById("findBtn").addEventListener("click",renderGuide);
 knownEl.addEventListener("change",renderGuide);targetEl.addEventListener("change",renderGuide);document.getElementById("topic").addEventListener("change",renderGuide);
