@@ -44,14 +44,14 @@ footer{color:var(--muted);font-size:.85rem;text-align:center;margin-top:28px}
 
 <section id="guide" class="panel">
 <h2>Find en formel ud fra det, du ved</h2>
-<p class="sub">Vælg først, hvilke størrelser du kender, og derefter hvad du skal finde. Appen viser mulige formler – den regner ikke noget ud.</p>
+<p class="sub">Markér de størrelser, du allerede kender. Appen viser automatisk alle formler, du kan bruge, og hvilke ukendte størrelser du kan finde. Du kan også vælge én bestemt størrelse.</p>
 <label for="topic">Område</label>
 <select id="topic"><option value="all">Alle områder</option><option value="basic">Grundlæggende AC</option><option value="coil">Spole</option><option value="cap">Kondensator</option><option value="series">Serieforbindelse</option><option value="parallel">Parallelforbindelse</option></select>
 <label>Hvilke værdier har du?</label>
 <div class="checkgrid" id="known"></div>
 <label for="target">Hvad skal du finde?</label>
-<select id="target"><option value="">Vælg en størrelse</option></select>
-<div style="margin-top:14px"><button class="primary" id="findBtn">Vis relevante formler</button></div>
+<select id="target"><option value="">Vis alle muligheder</option></select>
+<div style="margin-top:14px"><button class="primary" id="findBtn">Opdatér formler</button></div>
 <div id="guideResults" aria-live="polite" style="margin-top:16px"><div class="empty">Vælg dine kendte værdier og det, du skal finde.</div></div>
 </section>
 
@@ -72,66 +72,144 @@ footer{color:var(--muted);font-size:.85rem;text-align:center;margin-top:28px}
 <li>Læs den foreslåede formel og symbolforklaringen.</li>
 <li>Indsæt selv dine tal i formlen og regn opgaven.</li>
 </ol>
-<div class="note"><strong>Vigtigt:</strong> Dette er første version. Kontrollér altid, at formlen passer til opgavens kredsløb og de givne betingelser. Især for serie- og parallelkredsløb afhænger formlen af, hvilke komponenter der indgår.</div>
+<div class="note"><strong>Vigtigt:</strong> Formlerne dækker de almindelige AC-emner i denne oversigt. Kontrollér altid, at formlen passer til opgavens kredsløb og de givne betingelser. Især for serie- og parallelkredsløb afhænger formlen af, hvilke komponenter der indgår.</div>
 </section>
-<footer>AC Theory · Første version · Ingen automatiske beregninger</footer>
+<footer>AC Theory · Udvidet formelsamling · Ingen automatiske beregninger</footer>
 </main>
 <script>
 const vars = {
- U:"Spænding (U)", I:"Strøm (I)", R:"Modstand (R)", P:"Effekt (P)", f:"Frekvens (f)",
- w:"Vinkelfrekvens (ω)", L:"Induktans (L)", XL:"Induktiv reaktans (Xₗ)",
- C:"Kapacitans (C)", XC:"Kapacitiv reaktans (X꜀)", Z:"Impedans (Z)",
- Rsum:"Samlet modstand (Rₛ)", X:"Samlet reaktans (X)", Zt:"Samlet impedans (Zₜ)",
- G:"Konduktans (G)", B:"Susceptans (B)", Y:"Admittans (Y)"
+ U:"Spænding (U)", I:"Strøm (I)", R:"Ohmsk modstand (R)", P:"Aktiv effekt (P)", f:"Frekvens (f)",
+ w:"Vinkelfrekvens (ω)", T:"Periodetid (T)", L:"Induktans (L)", XL:"Induktiv reaktans (Xₗ)",
+ C:"Kapacitans (C i F)", Cuf:"Kapacitans (C i µF)", XC:"Kapacitiv reaktans (X꜀)", Z:"Impedans (Z)",
+ X:"Samlet reaktans (X)", Zt:"Samlet impedans (Zₜ)", Rt:"Samlet resistans (Rₜ)",
+ G:"Konduktans (G)", B:"Samlet susceptans (B)", BL:"Induktiv susceptans (Bₗ)", BC:"Kapacitiv susceptans (B꜀)", Y:"Admittans (Y)",
+ Q:"Reaktiv effekt (Q)", S:"Tilsyneladende effekt (S)", phi:"Fasevinkel (φ)", cos:"Effektfaktor (cos φ)", sin:"sin φ", tan:"tan φ",
+ UR:"Spænding over modstand (Uᵣ)", UL:"Spænding over spole (Uₗ)", UC:"Spænding over kondensator (U꜀)",
+ IR:"Strøm gennem modstand (Iᵣ)", IL:"Strøm gennem spole (Iₗ)", IC:"Strøm gennem kondensator (I꜀)"
 };
-const formulas = [
-{id:"ohmU",topic:"basic",name:"Ohms lov – spænding",eq:"U = R · I",known:["R","I"],target:"U",desc:"Bruges til at finde spænding over en modstand."},
-{id:"ohmI",topic:"basic",name:"Ohms lov – strøm",eq:"I = U / R",known:["U","R"],target:"I",desc:"Bruges til at finde strøm gennem en modstand."},
-{id:"ohmR",topic:"basic",name:"Ohms lov – modstand",eq:"R = U / I",known:["U","I"],target:"R",desc:"Bruges til at finde modstand."},
-{id:"power",topic:"basic",name:"Effekt",eq:"P = U · I",known:["U","I"],target:"P",desc:"Elektrisk effekt ved spænding og strøm."},
-{id:"omega",topic:"basic",name:"Vinkelfrekvens",eq:"ω = 2 · π · f",known:["f"],target:"w",desc:"Sammenhæng mellem frekvens og vinkelfrekvens."},
-{id:"freq",topic:"basic",name:"Frekvens",eq:"f = ω / (2 · π)",known:["w"],target:"f",desc:"Omskrivning af vinkelfrekvensformlen."},
-{id:"xl",topic:"coil",name:"Induktiv reaktans",eq:"Xₗ = 2 · π · f · L",known:["f","L"],target:"XL",desc:"Spolens reaktans ved en given frekvens."},
-{id:"inductance",topic:"coil",name:"Induktans ud fra reaktans",eq:"L = Xₗ / (2 · π · f)",known:["XL","f"],target:"L",desc:"Omskrivning af formlen for induktiv reaktans."},
-{id:"xc",topic:"cap",name:"Kapacitiv reaktans",eq:"X꜀ = 1 / (2 · π · f · C)",known:["f","C"],target:"XC",desc:"Kondensatorens reaktans ved en given frekvens."},
-{id:"capacitance",topic:"cap",name:"Kapacitans ud fra reaktans",eq:"C = 1 / (2 · π · f · X꜀)",known:["f","XC"],target:"C",desc:"Omskrivning af formlen for kapacitiv reaktans."},
-{id:"zrl",topic:"series",name:"Impedans – serie RL",eq:"Z = √(R² + Xₗ²)",known:["R","XL"],target:"Z",desc:"Seriekredsløb med modstand og spole."},
-{id:"zrc",topic:"series",name:"Impedans – serie RC",eq:"Z = √(R² + X꜀²)",known:["R","XC"],target:"Z",desc:"Seriekredsløb med modstand og kondensator."},
-{id:"zrlc",topic:"series",name:"Impedans – serie RLC",eq:"Z = √(R² + (Xₗ − X꜀)²)",known:["R","XL","XC"],target:"Z",desc:"Seriekredsløb med modstand, spole og kondensator."},
-{id:"xseries",topic:"series",name:"Samlet reaktans – serie RLC",eq:"X = Xₗ − X꜀",known:["XL","XC"],target:"X",desc:"Fortegnet viser, om kredsløbet samlet er induktivt eller kapacitivt."},
-{id:"rsum",topic:"series",name:"Samlet modstand – serie",eq:"Rₛ = R₁ + R₂ + …",known:["R"],target:"Rsum",desc:"Modstande i serie lægges sammen."},
-{id:"zparallel",topic:"parallel",name:"Impedans – parallel (generel)",eq:"1/Zₜ = 1/Z₁ + 1/Z₂ + …",known:["Z"],target:"Zt",desc:"Generel sammenhæng for impedanser i parallel. Brug de enkelte grenimpedanser."},
-{id:"rparallel",topic:"parallel",name:"Modstand – parallel",eq:"1/Rₜ = 1/R₁ + 1/R₂ + …",known:["R"],target:"Rsum",desc:"Generel formel for modstande i parallel."},
-{id:"g",topic:"parallel",name:"Konduktans",eq:"G = 1 / R",known:["R"],target:"G",desc:"Konduktans er den reciprokke værdi af modstand."}
-];
+const formulas = [];
+function add(id,topic,name,eq,known,target,desc,unit="") { formulas.push({id,topic,name,eq,known,target,desc,unit}); }
+// Grundlæggende vekselstrøm og Ohms lov
+add("ohmU","basic","Ohms lov – spænding","U = R · I",["R","I"],"U","Spænding over en ohmsk modstand.","V");
+add("ohmI","basic","Ohms lov – strøm","I = U / R",["U","R"],"I","Strøm gennem en ohmsk modstand.","A");
+add("ohmR","basic","Ohms lov – modstand","R = U / I",["U","I"],"R","Ohmsk modstand.","Ω");
+add("omega","basic","Vinkelfrekvens","ω = 2 · π · f",["f"],"w","Sammenhæng mellem frekvens og vinkelfrekvens.","rad/s");
+add("freq","basic","Frekvens","f = ω / (2 · π)",["w"],"f","Frekvens ud fra vinkelfrekvens.","Hz");
+add("period","basic","Periodetid","T = 1 / f",["f"],"T","Tid for én hel periode.","s");
+add("periodf","basic","Frekvens ud fra periodetid","f = 1 / T",["T"],"f","Frekvens ud fra periodetiden.","Hz");
+add("omegaT","basic","Vinkelfrekvens ud fra periodetid","ω = 2 · π / T",["T"],"w","Vinkelfrekvens ud fra periodetiden.","rad/s");
+add("powerUI","basic","Aktiv effekt","P = U · I · cos φ",["U","I","cos"],"P","Aktiv effekt ved vekselstrøm.","W");
+add("powerR","basic","Aktiv effekt – modstandsform","P = I² · R",["I","R"],"P","Aktiv effekt i en ohmsk modstand.","W");
+add("powerU2","basic","Aktiv effekt – spændingsform","P = U² / R",["U","R"],"P","Aktiv effekt i en ohmsk modstand.","W");
+add("powerU2R","basic","Modstand ud fra effekt og spænding","R = U² / P",["U","P"],"R","Omskrivning af effektformlen.","Ω");
+add("powerI2","basic","Strøm ud fra effekt og modstand","I = √(P / R)",["P","R"],"I","Omskrivning af P = I² · R.","A");
+add("apparent","basic","Tilsyneladende effekt","S = U · I",["U","I"],"S","Tilsyneladende effekt.","VA");
+add("reactive","basic","Reaktiv effekt","Q = U · I · sin φ",["U","I","sin"],"Q","Reaktiv effekt med fortegn bestemt af fasevinklen.","VAr");
+add("powertriangleS","basic","Effekttrekant – S","S = √(P² + Q²)",["P","Q"],"S","Tilsyneladende effekt ud fra P og Q.","VA");
+add("powertriangleP","basic","Effekttrekant – P","P = √(S² − Q²)",["S","Q"],"P","Aktiv effekt ud fra S og Q.","W");
+add("powertriangleQ","basic","Effekttrekant – Q","Q = ±√(S² − P²)",["S","P"],"Q","Størrelsen af reaktiv effekt. Vælg plus for induktivt og minus for kapacitivt kredsløb.","VAr");
+add("cosPS","basic","Effektfaktor","cos φ = P / S",["P","S"],"cos","Effektfaktor ud fra aktiv og tilsyneladende effekt.");
+add("sinQS","basic","Sinus til fasevinkel","sin φ = Q / S",["Q","S"],"sin","Sinus til fasevinklen.");
+add("tanQP","basic","Tangens til fasevinkel","tan φ = Q / P",["Q","P"],"tan","Tangens til fasevinklen.");
+add("phi","basic","Fasevinkel","φ = arccos(P / S)",["P","S"],"phi","Fasevinklen ud fra aktiv og tilsyneladende effekt.","°");
+// Spole og kondensator
+add("xl","coil","Induktiv reaktans","Xₗ = 2 · π · f · L",["f","L"],"XL","Spolens induktive reaktans.","Ω");
+add("inductance","coil","Induktans","L = Xₗ / (2 · π · f)",["XL","f"],"L","Induktans ud fra reaktans og frekvens.","H");
+add("fXL","coil","Frekvens ud fra induktiv reaktans","f = Xₗ / (2 · π · L)",["XL","L"],"f","Frekvens ud fra spoledata.","Hz");
+add("xc","cap","Kapacitiv reaktans","X꜀ = 1 / (2 · π · f · C)",["f","C"],"XC","Kondensatorens kapacitive reaktans.","Ω");
+add("xcuf","cap","Kapacitiv reaktans med C i µF","X꜀ = 10⁶ / (2 · π · f · CµF)",["f","Cuf"],"XC","Bruges når kapacitansen indtastes i mikrofarad (µF).","Ω");
+add("capacitance","cap","Kapacitans","C = 1 / (2 · π · f · X꜀)",["f","XC"],"C","Kapacitans ud fra reaktans og frekvens.","F");
+add("fXC","cap","Frekvens ud fra kapacitiv reaktans","f = 1 / (2 · π · C · X꜀)",["C","XC"],"f","Frekvens ud fra kondensatorens reaktans.","Hz");
+// Serieforbindelser
+add("zrl","series","Impedans – serie RL","Z = √(R² + Xₗ²)",["R","XL"],"Z","Seriekredsløb med modstand og spole.","Ω");
+add("zrc","series","Impedans – serie RC","Z = √(R² + X꜀²)",["R","XC"],"Z","Seriekredsløb med modstand og kondensator.","Ω");
+add("zrlc","series","Impedans – serie RLC","Z = √(R² + (Xₗ − X꜀)²)",["R","XL","XC"],"Z","Seriekredsløb med modstand, spole og kondensator.","Ω");
+add("xseries","series","Samlet reaktans – serie RLC","X = Xₗ − X꜀",["XL","XC"],"X","Positivt resultat er induktivt; negativt er kapacitivt.","Ω");
+add("zseriesui","series","Impedans fra spænding og strøm","Z = U / I",["U","I"],"Z","Samlet impedans i et seriekredsløb.","Ω");
+add("iseries","series","Strøm i seriekredsløb","I = U / Z",["U","Z"],"I","Strømmen er den samme gennem alle seriekomponenter.","A");
+add("ur","series","Spænding over modstand","Uᵣ = I · R",["I","R"],"UR","Spænding over den ohmske modstand.","V");
+add("ul","series","Spænding over spole","Uₗ = I · Xₗ",["I","XL"],"UL","Spænding over spolen.","V");
+add("uc","series","Spænding over kondensator","U꜀ = I · X꜀",["I","XC"],"UC","Spænding over kondensatoren.","V");
+add("urR","series","Modstand ud fra Uᵣ og I","R = Uᵣ / I",["UR","I"],"R","Ohmsk modstand ud fra spændingsfald og strøm.","Ω");
+add("xlUL","series","Induktiv reaktans ud fra Uₗ og I","Xₗ = Uₗ / I",["UL","I"],"XL","Spolens reaktans ud fra spænding og strøm.","Ω");
+add("xcUC","series","Kapacitiv reaktans ud fra U꜀ og I","X꜀ = U꜀ / I",["UC","I"],"XC","Kondensatorens reaktans ud fra spænding og strøm.","Ω");
+add("useries","series","Samlet spænding – serie RL","U = √(Uᵣ² + Uₗ²)",["UR","UL"],"U","Vektorsum af modstands- og induktiv spænding.","V");
+add("useriesRC","series","Samlet spænding – serie RC","U = √(Uᵣ² + U꜀²)",["UR","UC"],"U","Vektorsum af modstands- og kapacitiv spænding.","V");
+add("useriesRLC","series","Samlet spænding – serie RLC","U = √(Uᵣ² + (Uₗ − U꜀)²)",["UR","UL","UC"],"U","Vektorsum i et RLC-seriekredsløb.","V");
+add("rsum","series","Modstande i serie","Rₜ = R₁ + R₂ + …",["R"],"Rt","Modstande i serie lægges sammen. Bruges på enkeltmodstande.","Ω");
+add("phiRL","series","Fasevinkel – serie RL","φ = arctan(Xₗ / R)",["XL","R"],"phi","Positiv fasevinkel for et induktivt seriekredsløb.","°");
+add("phiRC","series","Fasevinkel – serie RC","φ = −arctan(X꜀ / R)",["XC","R"],"phi","Negativ fasevinkel for et kapacitivt seriekredsløb.","°");
+add("phiRLC","series","Fasevinkel – serie RLC","φ = arctan((Xₗ − X꜀) / R)",["XL","XC","R"],"phi","Fasevinkel for et RLC-seriekredsløb.","°");
+// Parallelforbindelser
+add("g","parallel","Konduktans","G = 1 / R",["R"],"G","Konduktans er den reciprokke værdi af resistans.","S");
+add("bl","parallel","Induktiv susceptans","Bₗ = −1 / Xₗ",["XL"],"BL","Induktiv susceptans med negativt fortegn i denne fortegnskonvention.","S");
+add("bc","parallel","Kapacitiv susceptans","B꜀ = 1 / X꜀",["XC"],"BC","Kapacitiv susceptans.","S");
+add("bparallel","parallel","Samlet susceptans – parallel RLC","B = B꜀ + Bₗ",["BC","BL"],"B","Summen af kapacitiv og induktiv susceptans.","S");
+add("yparallel","parallel","Admittans – parallel RLC","Y = √(G² + B²)",["G","B"],"Y","Samlet admittans i et parallelt kredsløb.","S");
+add("zparallelY","parallel","Impedans fra admittans","Z = 1 / Y",["Y"],"Z","Samlet impedans som den reciprokke admittans.","Ω");
+add("zparallelRC","parallel","Impedans – parallel RC","Z = 1 / √(G² + B꜀²)",["G","BC"],"Z","Parallelkobling af R og C.","Ω");
+add("zparallelRL","parallel","Impedans – parallel RL","Z = 1 / √(G² + Bₗ²)",["G","BL"],"Z","Parallelkobling af R og L.","Ω");
+add("zparallelcap","parallel","Impedans – parallel R og C (reaktanser)","Z = (R · X꜀) / √(R² + X꜀²)",["R","XC"],"Z","Alternativ formel for parallel R-C.","Ω");
+add("zparallelcoil","parallel","Impedans – parallel R og L (reaktanser)","Z = (R · Xₗ) / √(R² + Xₗ²)",["R","XL"],"Z","Alternativ formel for parallel R-L.","Ω");
+add("uparallel","parallel","Fælles spænding i parallel","U = Uᵣ = Uₗ = U꜀",["UR"],"U","Spændingen er den samme over alle parallelgrene.","V");
+add("irparallel","parallel","Strøm gennem modstand","Iᵣ = U / R",["U","R"],"IR","Grenstrøm gennem modstanden.","A");
+add("ilparallel","parallel","Strøm gennem spole","Iₗ = U / Xₗ",["U","XL"],"IL","Grenstrøm gennem spolen.","A");
+add("icparallel","parallel","Strøm gennem kondensator","I꜀ = U / X꜀",["U","XC"],"IC","Grenstrøm gennem kondensatoren.","A");
+add("itparallelRC","parallel","Samlet strøm – parallel RC","I = √(Iᵣ² + I꜀²)",["IR","IC"],"I","Vektorsum af resistiv og kapacitiv grenstrøm.","A");
+add("itparallelRL","parallel","Samlet strøm – parallel RL","I = √(Iᵣ² + Iₗ²)",["IR","IL"],"I","Vektorsum af resistiv og induktiv grenstrøm.","A");
+add("itparallelRLC","parallel","Samlet strøm – parallel RLC","I = √(Iᵣ² + (I꜀ − Iₗ)²)",["IR","IC","IL"],"I","Vektorsum for parallel RLC.","A");
+add("iparallelY","parallel","Samlet strøm fra admittans","I = U · Y",["U","Y"],"I","Samlet strøm ud fra spænding og admittans.","A");
+add("rparallel","parallel","Modstande i parallel","1 / Rₜ = 1/R₁ + 1/R₂ + …",["R"],"Rt","Parallelkobling af flere ohmske modstande.","Ω");
+// Flere omskrivninger fra vekselstrøms-, spændings- og effekttrekanten
+add("zfromux","series","Impedans ud fra R og samlet reaktans","Z = √(R² + X²)",["R","X"],"Z","Impedanstrekanten.","Ω");
+add("rfromzx","series","Resistans ud fra Z og X","R = √(Z² − X²)",["Z","X"],"R","Omskrivning af impedanstrekanten.","Ω");
+add("xfromzr","series","Reaktans ud fra Z og R","X = √(Z² − R²)",["Z","R"],"X","Omskrivning af impedanstrekanten.","Ω");
+add("rfromzcos","series","Resistans ud fra Z og cos φ","R = Z · cos φ",["Z","cos"],"R","Modstandstrekant og effektfaktor.","Ω");
+add("xfromzsin","series","Reaktans ud fra Z og sin φ","X = Z · sin φ",["Z","sin"],"X","Modstandstrekant og fasevinkel.","Ω");
+add("uFromzi","series","Spænding ud fra impedans og strøm","U = Z · I",["Z","I"],"U","Spænding i et AC-kredsløb.","V");
+add("zfromui","series","Impedans ud fra spænding og strøm","Z = U / I",["U","I"],"Z","Samlet impedans.","Ω");
+add("urfrompi","series","Modstandsspænding ud fra P og I","Uᵣ = P / I",["P","I"],"UR","Fra effekt- og spændingstrekanten.","V");
+add("ulfromqi","series","Induktiv spænding ud fra Q og I","Uₗ = Q / I",["Q","I"],"UL","Fra effekt- og spændingstrekanten; Q er her induktiv.","V");
+add("ifromur","series","Strøm ud fra Uᵣ og R","I = Uᵣ / R",["UR","R"],"I","Strøm gennem modstanden.","A");
+add("ifromul","series","Strøm ud fra Uₗ og Xₗ","I = Uₗ / Xₗ",["UL","XL"],"I","Strøm gennem spolen.","A");
+add("pfromuri","series","Aktiv effekt ud fra Uᵣ og I","P = Uᵣ · I",["UR","I"],"P","Aktiv effekt i modstanden.","W");
+add("qfromuli","coil","Reaktiv effekt ud fra Uₗ og I","Q = Uₗ · I",["UL","I"],"Q","Induktiv reaktiv effekt.","VAr");
+add("sfromui","basic","Tilsyneladende effekt ud fra U og I","S = U · I",["U","I"],"S","Effekttrekanten.","VA");
+add("pfromscos","basic","Aktiv effekt ud fra S og cos φ","P = S · cos φ",["S","cos"],"P","Effektfaktor og effekttrekant.","W");
+add("qfromssin","basic","Reaktiv effekt ud fra S og sin φ","Q = S · sin φ",["S","sin"],"Q","Effektfaktor og effekttrekant.","VAr");
+add("sfrompcos","basic","Tilsyneladende effekt ud fra P og cos φ","S = P / cos φ",["P","cos"],"S","Effektfaktor.","VA");
+add("cosfromrz","series","cos φ ud fra R og Z","cos φ = R / Z",["R","Z"],"cos","Effektfaktor fra modstandstrekanten.");
+add("sinfromxz","series","sin φ ud fra X og Z","sin φ = X / Z",["X","Z"],"sin","Sinus fra modstandstrekanten.");
+add("tanfromxr","series","tan φ ud fra X og R","tan φ = X / R",["X","R"],"tan","Tangens fra modstandstrekanten.");
+// Fælles effekt- og faseformler for serie/parallel
+add("pseriesR","series","Aktiv effekt – serie/modstand","P = I² · R",["I","R"],"P","Aktiv effekt i den ohmske del.","W");
+add("qcoil","coil","Reaktiv effekt – spole","Q = I² · Xₗ",["I","XL"],"Q","Positiv reaktiv effekt for en ideel spole.","VAr");
+add("qcap","cap","Reaktiv effekt – kondensator","Q = −I² · X꜀",["I","XC"],"Q","Negativ reaktiv effekt for en ideel kondensator.","VAr");
+add("qparallelcap","parallel","Reaktiv effekt – parallel kondensator","Q = −U² / X꜀",["U","XC"],"Q","Negativ reaktiv effekt for en kondensator i parallel.","VAr");
+add("qparallelcoil","parallel","Reaktiv effekt – parallel spole","Q = U² / Xₗ",["U","XL"],"Q","Positiv reaktiv effekt for en spole i parallel.","VAr");
+add("cosRZ","series","Cos φ – impedanstrekant","cos φ = R / Z",["R","Z"],"cos","Effektfaktor for et seriekredsløb med samlet R og Z.");
+add("sinXZ","series","Sin φ – impedanstrekant","sin φ = X / Z",["X","Z"],"sin","Sinus til fasevinklen ud fra samlet reaktans.");
+add("tanXR","series","Tan φ – impedanstrekant","tan φ = X / R",["X","R"],"tan","Tangens til fasevinklen ud fra samlet reaktans og resistans.");
+
 const topicNames={basic:"Grundlæggende AC",coil:"Spole",cap:"Kondensator",series:"Serieforbindelse",parallel:"Parallelforbindelse"};
 const knownEl=document.getElementById("known"), targetEl=document.getElementById("target");
 Object.entries(vars).forEach(([k,v])=>{knownEl.insertAdjacentHTML("beforeend",`<label class="check"><input type="checkbox" value="${k}"><span>${v}</span></label>`);targetEl.insertAdjacentHTML("beforeend",`<option value="${k}">${v}</option>`)});
-function card(f){return `<article class="formula"><h3>${f.name}</h3><div class="eq">${f.eq}</div><div>${f.desc}</div><div class="tags"><span class="tag">${topicNames[f.topic]}</span><span class="tag">Find: ${vars[f.target]}</span></div><p class="small"><strong>Formlen kræver:</strong> ${f.known.map(k=>vars[k]).join(" · ")}</p></article>`}
+function card(f,selected=null){const missing=selected===null?[]:f.known.filter(k=>!selected.includes(k));const unit=f.unit?"<span class=\"tag\">Enhed: "+f.unit+"</span>":"";const status=selected===null?"":(missing.length?"<p class=\"small\"><strong>Mangler:</strong> "+missing.map(k=>vars[k]).join(" · ")+"</p>":"<p class=\"small\" style=\"color:var(--green)\"><strong>Alle nødvendige størrelser er valgt.</strong></p>");return "<article class=\"formula\"><h3>"+f.name+"</h3><div class=\"eq\">"+f.eq+"</div><div>"+f.desc+"</div><div class=\"tags\"><span class=\"tag\">"+topicNames[f.topic]+"</span><span class=\"tag\">Kan finde: "+vars[f.target]+"</span>"+unit+"</div><p class=\"small\"><strong>Kræver:</strong> "+f.known.map(k=>vars[k]).join(" · ")+"</p>"+status+"</article>"}
 function renderGuide(){
  const selected=[...knownEl.querySelectorAll("input:checked")].map(x=>x.value), target=targetEl.value, topic=document.getElementById("topic").value;
- const matches=formulas.filter(f=>(topic==="all"||f.topic===topic)&&f.target===target&&f.known.every(k=>selected.includes(k)));
+ const possible=formulas.filter(f=>(topic==="all"||f.topic===topic)&&selected.length>0&&f.known.every(k=>selected.includes(k)));
+ const matches=possible.filter(f=>!target||f.target===target);
  const results=document.getElementById("guideResults");
- results.innerHTML=matches.length?`<p><strong>${matches.length} relevant(e) formel(r) fundet:</strong></p>${matches.map(card).join("")}`:`<div class="empty">Jeg fandt ingen formler, hvor alle nødvendige værdier er valgt. Kontrollér dine valg, eller prøv et andet område. Appen viser kun formler, den har i denne første version.</div>`;
+ if(!selected.length){results.innerHTML='<div class="empty">Markér først de værdier, du allerede kender. Så finder appen de formler, du kan bruge.</div>';return;}
+ if(matches.length){results.innerHTML=`<p><strong>${matches.length} formel${matches.length===1?"":"r"} kan bruges med dine valgte værdier:</strong></p>${matches.map(f=>card(f,selected)).join("")}`;}
+ else {results.innerHTML=`<div class="empty">Ingen formler matcher ${target?"den valgte størrelse":"dine valg"}. Prøv at vælge flere kendte værdier eller et andet område.</div>`;}
 }
 document.getElementById("findBtn").addEventListener("click",renderGuide);
-function renderLibrary(){
- const q=document.getElementById("search").value.toLowerCase(), topic=document.getElementById("libTopic").value;
- const found=formulas.filter(f=>(topic==="all"||f.topic===topic)&&[f.name,f.eq,f.desc,vars[f.target],...f.known.map(k=>vars[k])].join(" ").toLowerCase().includes(q));
- document.getElementById("libraryResults").innerHTML=found.length?found.map(card).join(""):`<div class="empty">Ingen formler matcher din søgning.</div>`;
-}
-document.getElementById("search").addEventListener("input",renderLibrary);
-document.getElementById("libTopic").addEventListener("change",renderLibrary);
-function show(which){
- const guide=which==="guide";
- document.getElementById("guide").classList.toggle("hidden",!guide);
- document.getElementById("library").classList.toggle("hidden",guide);
- document.getElementById("guideTab").setAttribute("aria-selected",guide);
- document.getElementById("libraryTab").setAttribute("aria-selected",!guide);
-}
-document.getElementById("guideTab").addEventListener("click",()=>show("guide"));
-document.getElementById("libraryTab").addEventListener("click",()=>show("library"));
-renderLibrary();
+knownEl.addEventListener("change",renderGuide);targetEl.addEventListener("change",renderGuide);document.getElementById("topic").addEventListener("change",renderGuide);
+function renderLibrary(){const q=document.getElementById("search").value.toLowerCase(),topic=document.getElementById("libTopic").value;const found=formulas.filter(f=>(topic==="all"||f.topic===topic)&&[f.name,f.eq,f.desc,vars[f.target],...f.known.map(k=>vars[k])].join(" ").toLowerCase().includes(q));document.getElementById("libraryResults").innerHTML=found.length?`<p class="small">${found.length} formler i oversigten</p>${found.map(f=>card(f)).join("")}`:`<div class="empty">Ingen formler matcher din søgning.</div>`;}
+document.getElementById("search").addEventListener("input",renderLibrary);document.getElementById("libTopic").addEventListener("change",renderLibrary);
+function show(which){const guide=which==="guide";document.getElementById("guide").classList.toggle("hidden",!guide);document.getElementById("library").classList.toggle("hidden",guide);document.getElementById("guideTab").setAttribute("aria-selected",guide);document.getElementById("libraryTab").setAttribute("aria-selected",!guide);}
+document.getElementById("guideTab").addEventListener("click",()=>show("guide"));document.getElementById("libraryTab").addEventListener("click",()=>show("library"));renderLibrary();renderGuide();
 if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("./sw.js").catch(()=>{});
 </script>
 </body></html>
