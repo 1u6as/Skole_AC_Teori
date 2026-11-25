@@ -41,12 +41,21 @@ footer{color:var(--muted);font-size:.85rem;text-align:center;margin-top:28px}
 <button class="tab" id="guideTab" aria-selected="true">Formelhjælper</button>
 <button class="tab" id="libraryTab" aria-selected="false">Formeloversigt</button>
 </nav>
+<section class="panel" style="padding:14px 18px;margin-bottom:16px">
+<h2>Formelniveau</h2>
+<p class="sub" style="margin-bottom:8px">Vælg om du kun vil se grundlæggende formler, eller om de avancerede emner skal lægges oveni.</p>
+<div class="checkgrid">
+<label class="check"><input type="radio" name="level" value="basic" checked> Kun grundlæggende</label>
+<label class="check"><input type="radio" name="level" value="all"> Grundlæggende + avanceret</label>
+</div>
+<p class="small" id="levelInfo">Viser grundlæggende AC-formler.</p>
+</section>
 
 <section id="guide" class="panel">
 <h2>Find en formel ud fra det, du ved</h2>
 <p class="sub">Markér de størrelser, du allerede kender. Appen viser automatisk alle formler, du kan bruge, og hvilke ukendte størrelser du kan finde. Du kan også vælge én bestemt størrelse.</p>
 <label for="topic">Område</label>
-<select id="topic"><option value="all">Alle områder</option><option value="basic">Grundlæggende AC</option><option value="coil">Spole</option><option value="cap">Kondensator</option><option value="series">Serieforbindelse</option><option value="parallel">Parallelforbindelse</option></select>
+<select id="topic"><option value="all">Alle områder</option><option value="basic">Grundlæggende AC</option><option value="coil">Spole</option><option value="cap">Kondensator</option><option value="series">Serieforbindelse</option><option value="parallel">Parallelforbindelse</option><option value="wave">Sinusform og RMS</option><option value="complex">Komplekse tal og fasorer</option><option value="resonance">Resonans og Q-faktor</option><option value="three">Trefaset AC</option><option value="transformer">Transformatorer</option><option value="filters">Filtre</option><option value="powerquality">Effektkvalitet</option></select>
 <label>Hvilke værdier har du?</label>
 <div class="checkgrid" id="known"></div>
 <label for="target">Hvad skal du finde?</label>
@@ -60,7 +69,7 @@ footer{color:var(--muted);font-size:.85rem;text-align:center;margin-top:28px}
 <p class="sub">Gennemse formlerne efter emne eller søg efter en størrelse/formel.</p>
 <input type="search" id="search" placeholder="Søg fx Xc, frekvens eller impedans">
 <label for="libTopic">Filtrer efter område</label>
-<select id="libTopic"><option value="all">Alle områder</option><option value="basic">Grundlæggende AC</option><option value="coil">Spole</option><option value="cap">Kondensator</option><option value="series">Serieforbindelse</option><option value="parallel">Parallelforbindelse</option></select>
+<select id="libTopic"><option value="all">Alle områder</option><option value="basic">Grundlæggende AC</option><option value="coil">Spole</option><option value="cap">Kondensator</option><option value="series">Serieforbindelse</option><option value="parallel">Parallelforbindelse</option><option value="wave">Sinusform og RMS</option><option value="complex">Komplekse tal og fasorer</option><option value="resonance">Resonans og Q-faktor</option><option value="three">Trefaset AC</option><option value="transformer">Transformatorer</option><option value="filters">Filtre</option><option value="powerquality">Effektkvalitet</option></select>
 <div id="libraryResults"></div>
 </section>
 
@@ -85,10 +94,16 @@ const vars = {
  G:"Konduktans (G)", B:"Samlet susceptans (B)", BL:"Induktiv susceptans (Bₗ)", BC:"Kapacitiv susceptans (B꜀)", Y:"Admittans (Y)",
  Q:"Reaktiv effekt (Q)", S:"Tilsyneladende effekt (S)", phi:"Fasevinkel (φ)", cos:"Effektfaktor (cos φ)", sin:"sin φ", tan:"tan φ",
  UR:"Spænding over modstand (Uᵣ)", UL:"Spænding over spole (Uₗ)", UC:"Spænding over kondensator (U꜀)",
- IR:"Strøm gennem modstand (Iᵣ)", IL:"Strøm gennem spole (Iₗ)", IC:"Strøm gennem kondensator (I꜀)"
+ IR:"Strøm gennem modstand (Iᵣ)", IL:"Strøm gennem spole (Iₗ)", IC:"Strøm gennem kondensator (I꜀)",
+ Vpk:"Spændingens spidsværdi (Û)", Ipk:"Strømmens spidsværdi (Î)", Vrms:"Effektiv spænding (Uᵣₘₛ)", Irms:"Effektiv strøm (Iᵣₘₛ)",
+ vinst:"Øjebliksspænding (u(t))", iinst:"Øjebliksstrøm (i(t))", theta:"Vinkel (θ)", Zre:"Impedansens realdel (R)", Zim:"Impedansens imaginærdel (X)", jmag:"Imaginær enhed (j)",
+ f0:"Resonansfrekvens (f₀)", Qfac:"Kvalitetsfaktor (Q₀)", BW:"Båndbredde (BW)", f1:"Nedre grænsefrekvens (f₁)", f2:"Øvre grænsefrekvens (f₂)",
+ VL:"Linjespænding (U_L)", Vph:"Fasespænding (U_f)", ILn:"Linjestrøm (I_L)", Iph:"Fasestrøm (I_f)", P3:"Trefaset aktiv effekt (P₃)", Q3:"Trefaset reaktiv effekt (Q₃)", S3:"Trefaset tilsyneladende effekt (S₃)",
+ Np:"Primærviklinger (Nₚ)", Ns:"Sekundærviklinger (Nₛ)", Vp:"Primærspænding (Uₚ)", Vs:"Sekundærspænding (Uₛ)", Ip:"Primærstrøm (Iₚ)", Is:"Sekundærstrøm (Iₛ)",
+ fc:"Grænsefrekvens (f_c)", H:"Overføringsfunktion (H)", Vin:"Indgangsspænding (U_in)", Vout:"Udgangsspænding (U_out)", QC:"Kompensationsreaktiv effekt (Q_C)", Ccomp:"Kompensationskapacitans (C)", THD:"Total harmonisk forvrængning (THD)", U1:"Grundtone-spænding (U₁)", U2:"2. harmoniske spænding (U₂)", U3:"3. harmoniske spænding (U₃)", tan1:"tan φ₁ – før kompensering", tan2:"tan φ₂ – efter kompensering", Scplx:"Kompleks effekt (S̲)"
 };
 const formulas = [];
-function add(id,topic,name,eq,known,target,desc,unit="") { formulas.push({id,topic,name,eq,known,target,desc,unit}); }
+function add(id,topic,name,eq,known,target,desc,unit="",level="basic") { formulas.push({id,topic,name,eq,known,target,desc,unit,level}); }
 // Grundlæggende vekselstrøm og Ohms lov
 add("ohmU","basic","Ohms lov – spænding","U = R · I",["R","I"],"U","Spænding over en ohmsk modstand.","V");
 add("ohmI","basic","Ohms lov – strøm","I = U / R",["U","R"],"I","Strøm gennem en ohmsk modstand.","A");
@@ -191,13 +206,77 @@ add("cosRZ","series","Cos φ – impedanstrekant","cos φ = R / Z",["R","Z"],"co
 add("sinXZ","series","Sin φ – impedanstrekant","sin φ = X / Z",["X","Z"],"sin","Sinus til fasevinklen ud fra samlet reaktans.");
 add("tanXR","series","Tan φ – impedanstrekant","tan φ = X / R",["X","R"],"tan","Tangens til fasevinklen ud fra samlet reaktans og resistans.");
 
-const topicNames={basic:"Grundlæggende AC",coil:"Spole",cap:"Kondensator",series:"Serieforbindelse",parallel:"Parallelforbindelse"};
+// AVANCERET: bølgeformer, RMS og spidsværdier
+add("rmsV","wave","Effektivværdi af sinusspænding","Uᵣₘₛ = Û / √2",["Vpk"],"Vrms","Gælder en ren sinusformet spænding.","V","advanced");
+add("peakV","wave","Spidsværdi ud fra effektivværdi","Û = √2 · Uᵣₘₛ",["Vrms"],"Vpk","Gælder en ren sinusformet spænding.","V","advanced");
+add("rmsI","wave","Effektivværdi af sinusstrøm","Iᵣₘₛ = Î / √2",["Ipk"],"Irms","Gælder en ren sinusformet strøm.","A","advanced");
+add("peakI","wave","Strømmens spidsværdi","Î = √2 · Iᵣₘₛ",["Irms"],"Ipk","Gælder en ren sinusformet strøm.","A","advanced");
+add("sineV","wave","Øjebliksværdi af spænding","u(t) = Û · sin(ωt + φ)",["Vpk","w","phi"],"vinst","Sinusformet spænding som funktion af tiden.","V","advanced");
+add("sineI","wave","Øjebliksværdi af strøm","i(t) = Î · sin(ωt + φ)",["Ipk","w","phi"],"iinst","Sinusformet strøm som funktion af tiden.","A","advanced");
+add("crest","wave","Crestfaktor for sinus","k_c = √2",[],"Vpk","Forholdet mellem spidsværdi og effektivværdi for en ideel sinus.","—","advanced");
+// AVANCERET: komplekse impedanser og fasorer
+add("zRcomplex","complex","Kompleks impedans – modstand","Z_R = R",["R"],"Z","Impedansen er rent reel.","Ω","advanced");
+add("zLcomplex","complex","Kompleks impedans – spole","Z_L = jωL = jXₗ",["w","L"],"Z","Ideel spole i kompleks form.","Ω","advanced");
+add("zCcomplex","complex","Kompleks impedans – kondensator","Z_C = 1/(jωC) = −jX꜀",["w","C"],"Z","Ideel kondensator i kompleks form.","Ω","advanced");
+add("zrect","complex","Impedans i rektangulær form","Z = R + jX",["R","X"],"Z","Real- og imaginærdel af impedansen.","Ω","advanced");
+add("zmag","complex","Impedansens beløb","|Z| = √(R² + X²)",["R","X"],"Z","Beløbet af kompleks impedans.","Ω","advanced");
+add("zphase","complex","Impedansens fasevinkel","φ = arctan(X/R)",["R","X"],"phi","Fortegn på X afgør induktiv eller kapacitiv karakter.","°","advanced");
+add("ycomplex","complex","Kompleks admittans","Y = 1/Z = G + jB",["Z"],"Y","Admittans er den reciprokke impedans.","S","advanced");
+add("ohmphasor","complex","Ohms lov med fasorer","U̲ = Z · I̲",["Z","I"],"U","Kompleks Ohms lov i sinusformet stationær tilstand.","V","advanced");
+add("seriesZcomplex","complex","Serieimpedanser i kompleks form","Zₜ = Z₁ + Z₂ + …",["Z"],"Zt","Impedanser i serie lægges sammen som komplekse tal.","Ω","advanced");
+add("parallelYcomplex","complex","Paralleladmittanser","Yₜ = Y₁ + Y₂ + …",["Y"],"Y","Admittanser i parallel lægges sammen.","S","advanced");
+add("complexPower","complex","Kompleks effekt","S̲ = U̲ · I̲* = P + jQ",["U","I"],"Scplx","I* er strømfasorens kompleks konjugerede. RMS-fasorer anvendes.","VA","advanced");
+// AVANCERET: resonans og selektivitet
+add("resfreq","resonance","Resonansfrekvens – RLC","f₀ = 1/(2π√(L·C))",["L","C"],"f0","Ideel resonansfrekvens for serie- eller parallel-LC.","Hz","advanced");
+add("resomega","resonance","Vinkelfrekvens ved resonans","ω₀ = 1/√(L·C)",["L","C"],"w","Ideel resonansvinkelfrekvens.","rad/s","advanced");
+add("resXLXC","resonance","Resonansbetingelse","Xₗ = X꜀",["XL","XC"],"X","Ved resonans ophæver induktiv og kapacitiv reaktans hinanden. Dette er en betingelse, ikke en selvstændig beregning af frekvensen.","Ω","advanced");
+add("qseries","resonance","Kvalitetsfaktor – serie RLC","Q₀ = ω₀L/R",["w","L","R"],"Qfac","Gælder serie-RLC med samlet seriemodstand R.","—","advanced");
+add("qseries2","resonance","Kvalitetsfaktor – serie RLC (L og C)","Q₀ = (1/R) · √(L/C)",["R","L","C"],"Qfac","Alternativ form ved ideel serie-RLC.","—","advanced");
+add("bandwidth","resonance","Båndbredde","BW = f₀/Q₀",["f0","Qfac"],"BW","Tilnærmelse for resonanskredsløb med passende høj Q.","Hz","advanced");
+add("bwEdges","resonance","Båndbredde fra grænsefrekvenser","BW = f₂ − f₁",["f1","f2"],"BW","Forskel mellem øvre og nedre grænsefrekvens.","Hz","advanced");
+add("qparallel","resonance","Kvalitetsfaktor – parallel RLC","Q₀ = R · √(C/L)",["R","C","L"],"Qfac","Gælder idealiseret parallel RLC med R parallelt.","—","advanced");
+// AVANCERET: trefaset vekselstrøm (balanceret belastning)
+add("p3","three","Aktiv effekt – trefaset","P₃ = √3 · U_L · I_L · cos φ",["VL","ILn","cos"],"P3","Balanceret trefaset system; U_L og I_L er linjeværdier.","W","advanced");
+add("q3","three","Reaktiv effekt – trefaset","Q₃ = √3 · U_L · I_L · sin φ",["VL","ILn","sin"],"Q3","Balanceret trefaset system.","VAr","advanced");
+add("s3","three","Tilsyneladende effekt – trefaset","S₃ = √3 · U_L · I_L",["VL","ILn"],"S3","Balanceret trefaset system.","VA","advanced");
+add("p3phase","three","Aktiv effekt fra faseværdier","P₃ = 3 · U_f · I_f · cos φ",["Vph","Iph","cos"],"P3","Balanceret trefaset system med faseværdier.","W","advanced");
+add("starV","three","Stjernekobling – spænding","U_L = √3 · U_f",["Vph"],"VL","Balanceret stjernekobling.","V","advanced");
+add("starI","three","Stjernekobling – strøm","I_L = I_f",["Iph"],"ILn","I stjerne er linjestrøm lig fasestrøm.","A","advanced");
+add("deltaV","three","Trekantkobling – spænding","U_L = U_f",["Vph"],"VL","I trekant er linjespænding lig fasespænding.","V","advanced");
+add("deltaI","three","Trekantkobling – strøm","I_L = √3 · I_f",["Iph"],"ILn","Balanceret trekantkobling.","A","advanced");
+add("neutralStar","three","Stjernepunkt – fasespænding","U_f = U_L / √3",["VL"],"Vph","Balanceret stjernekobling.","V","advanced");
+add("lineCurrentDelta","three","Fasestrøm i trekant","I_f = I_L / √3",["ILn"],"Iph","Balanceret trekantkobling.","A","advanced");
+// AVANCERET: transformatorer
+add("turnsRatioV","transformer","Transformator – spændingsforhold","Uₚ/Uₛ = Nₚ/Nₛ",["Vp","Np","Ns"],"Vs","Ideel transformator uden tab.","V","advanced");
+add("turnsRatioI","transformer","Transformator – strømforhold","Iₚ/Iₛ = Nₛ/Nₚ",["Ip","Np","Ns"],"Is","Ideel transformator; strømforholdet er omvendt af vindingstallet.","A","advanced");
+add("turnsRatioN","transformer","Vindingstal sekundær","Nₛ = Nₚ · Uₛ/Uₚ",["Np","Vp","Vs"],"Ns","Ideel transformator.","vindinger","advanced");
+add("transformerPower","transformer","Ideel transformator – effekt","Uₚ · Iₚ = Uₛ · Iₛ",["Vp","Ip","Vs"],"Is","Effekt ind er lig effekt ud i en ideel transformator.","VA","advanced");
+// AVANCERET: filtre og frekvensrespons
+add("rcCutoff","filters","RC-filters grænsefrekvens","f_c = 1/(2πRC)",["R","C"],"fc","Førsteordens RC lavpas/højpas.","Hz","advanced");
+add("rlCutoff","filters","RL-filters grænsefrekvens","f_c = R/(2πL)",["R","L"],"fc","Førsteordens RL-filter i standardkobling.","Hz","advanced");
+add("rcTau","filters","RC-tidskonstant","τ = R · C",["R","C"],"T","Tidskonstant for RC-kredsløb.","s","advanced");
+add("rlTau","filters","RL-tidskonstant","τ = L/R",["L","R"],"T","Tidskonstant for RL-kredsløb.","s","advanced");
+add("gain","filters","Spændingsforstærkning","Aᵥ = U_out/U_in",["Vout","Vin"],"H","Spændingsforhold mellem udgang og indgang.","—","advanced");
+add("gainDb","filters","Forstærkning i decibel","Aᵥ(dB) = 20·log₁₀(U_out/U_in)",["Vout","Vin"],"H","Spændingsforstærkning i dB for samme impedansniveau.","dB","advanced");
+add("rcLowpassMag","filters","RC-lavpas – amplitudeforhold","|H| = 1/√(1+(f/f_c)²)",["f","fc"],"H","Standard RC-lavpas, udgang over kondensatoren.","—","advanced");
+add("rcHighpassMag","filters","RC-højpas – amplitudeforhold","|H| = (f/f_c)/√(1+(f/f_c)²)",["f","fc"],"H","Standard RC-højpas, udgang over modstanden.","—","advanced");
+// AVANCERET: effektkompensering og elkvalitet
+add("qccomp","powerquality","Kondensator til effektkompensering","Q_C = P · (tan φ₁ − tan φ₂)",["P","tan1","tan2"],"QC","Nødvendig kompensering ved ændring fra cosφ₁ til cosφ₂.","VAr","advanced");
+add("ccomp","powerquality","Kapacitans til parallelkompensering","C = |Q_C|/(2πfU²)",["QC","f","U"],"Ccomp","Enfaset kondensator parallelt med belastningen.","F","advanced");
+add("thd","powerquality","Total harmonisk forvrængning – spænding (for 2. og 3. harmoniske)","THD = √(U₂²+U₃²)/U₁",["U1","U2","U3"],"THD","Forenklet eksempel med 2. og 3. harmoniske; i praksis medtages alle relevante harmoniske komponenter.","%","advanced");
+
+const topicNames={basic:"Grundlæggende AC",coil:"Spole",cap:"Kondensator",series:"Serieforbindelse",parallel:"Parallelforbindelse",wave:"Sinusform og RMS",complex:"Komplekse tal og fasorer",resonance:"Resonans og Q-faktor",three:"Trefaset AC",transformer:"Transformatorer",filters:"Filtre",powerquality:"Effektkvalitet"};
 const knownEl=document.getElementById("known"), targetEl=document.getElementById("target");
 Object.entries(vars).forEach(([k,v])=>{knownEl.insertAdjacentHTML("beforeend",`<label class="check"><input type="checkbox" value="${k}"><span>${v}</span></label>`);targetEl.insertAdjacentHTML("beforeend",`<option value="${k}">${v}</option>`)});
-function card(f,selected=null){const missing=selected===null?[]:f.known.filter(k=>!selected.includes(k));const unit=f.unit?"<span class=\"tag\">Enhed: "+f.unit+"</span>":"";const status=selected===null?"":(missing.length?"<p class=\"small\"><strong>Mangler:</strong> "+missing.map(k=>vars[k]).join(" · ")+"</p>":"<p class=\"small\" style=\"color:var(--green)\"><strong>Alle nødvendige størrelser er valgt.</strong></p>");return "<article class=\"formula\"><h3>"+f.name+"</h3><div class=\"eq\">"+f.eq+"</div><div>"+f.desc+"</div><div class=\"tags\"><span class=\"tag\">"+topicNames[f.topic]+"</span><span class=\"tag\">Kan finde: "+vars[f.target]+"</span>"+unit+"</div><p class=\"small\"><strong>Kræver:</strong> "+f.known.map(k=>vars[k]).join(" · ")+"</p>"+status+"</article>"}
+function levelMode(){return document.querySelector('input[name="level"]:checked')?.value||"basic";}
+function activeFormulas(){return formulas.filter(f=>levelMode()==="all"||f.level!=="advanced");}
+document.querySelectorAll('input[name="level"]').forEach(el=>el.addEventListener('change',()=>{document.getElementById('levelInfo').textContent=levelMode()==="all"?"Viser grundlæggende formler plus avancerede emner.":"Viser grundlæggende AC-formler.";renderGuide();renderLibrary();}));
+function card(f,selected=null){const missing=selected===null?[]:f.known.filter(k=>!selected.includes(k));const unit=f.unit?"<span class=\"tag\">Enhed: "+f.unit+"</span>":"";const levelTag=f.level==="advanced"?"<span class=\"tag\">Avanceret</span>":"<span class=\"tag\">Grundlæggende</span>";const status=selected===null?"":(missing.length?"<p class=\"small\"><strong>Mangler:</strong> "+missing.map(k=>vars[k]).join(" · ")+"</p>":"<p class=\"small\" style=\"color:var(--green)\"><strong>Alle nødvendige størrelser er valgt.</strong></p>");return "<article class=\"formula\"><h3>"+f.name+"</h3><div class=\"eq\">"+f.eq+"</div><div>"+f.desc+"</div><div class=\"tags\"><span class=\"tag\">"+topicNames[f.topic]+"</span><span class=\"tag\">Kan finde: "+vars[f.target]+"</span>"+unit+"</div><p class=\"small\"><strong>Kræver:</strong> "+f.known.map(k=>vars[k]).join(" · ")+"</p>"+status+"</article>"}
 function renderGuide(){
  const selected=[...knownEl.querySelectorAll("input:checked")].map(x=>x.value), target=targetEl.value, topic=document.getElementById("topic").value;
- const possible=formulas.filter(f=>(topic==="all"||f.topic===topic)&&selected.length>0&&f.known.every(k=>selected.includes(k)));
+ const pool=activeFormulas().filter(f=>(topic==="all"||f.topic===topic));
+ const reachable=new Set(selected), possible=[]; let changed=true;
+ while(changed){changed=false;for(const f of pool){if(f.known.every(k=>reachable.has(k))&&!possible.includes(f)){possible.push(f);if(!reachable.has(f.target)){reachable.add(f.target);changed=true;}}}}
  const matches=possible.filter(f=>!target||f.target===target);
  const results=document.getElementById("guideResults");
  if(!selected.length){results.innerHTML='<div class="empty">Markér først de værdier, du allerede kender. Så finder appen de formler, du kan bruge.</div>';return;}
@@ -206,7 +285,7 @@ function renderGuide(){
 }
 document.getElementById("findBtn").addEventListener("click",renderGuide);
 knownEl.addEventListener("change",renderGuide);targetEl.addEventListener("change",renderGuide);document.getElementById("topic").addEventListener("change",renderGuide);
-function renderLibrary(){const q=document.getElementById("search").value.toLowerCase(),topic=document.getElementById("libTopic").value;const found=formulas.filter(f=>(topic==="all"||f.topic===topic)&&[f.name,f.eq,f.desc,vars[f.target],...f.known.map(k=>vars[k])].join(" ").toLowerCase().includes(q));document.getElementById("libraryResults").innerHTML=found.length?`<p class="small">${found.length} formler i oversigten</p>${found.map(f=>card(f)).join("")}`:`<div class="empty">Ingen formler matcher din søgning.</div>`;}
+function renderLibrary(){const q=document.getElementById("search").value.toLowerCase(),topic=document.getElementById("libTopic").value;const found=activeFormulas().filter(f=>(topic==="all"||f.topic===topic)&&[f.name,f.eq,f.desc,vars[f.target],...f.known.map(k=>vars[k])].join(" ").toLowerCase().includes(q));document.getElementById("libraryResults").innerHTML=found.length?`<p class="small">${found.length} formler i oversigten</p>${found.map(f=>card(f)).join("")}`:`<div class="empty">Ingen formler matcher din søgning.</div>`;}
 document.getElementById("search").addEventListener("input",renderLibrary);document.getElementById("libTopic").addEventListener("change",renderLibrary);
 function show(which){const guide=which==="guide";document.getElementById("guide").classList.toggle("hidden",!guide);document.getElementById("library").classList.toggle("hidden",guide);document.getElementById("guideTab").setAttribute("aria-selected",guide);document.getElementById("libraryTab").setAttribute("aria-selected",!guide);}
 document.getElementById("guideTab").addEventListener("click",()=>show("guide"));document.getElementById("libraryTab").addEventListener("click",()=>show("library"));renderLibrary();renderGuide();
